@@ -1,0 +1,324 @@
+import org.junit.Assert;
+import org.junit.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertEquals;
+
+
+public class MonerisPaymentGatewayIntegrationTest {
+   private static WebDriver driver;
+   private static final String MONERIS_API_ENDPOINT = "https://esqa.moneris.com/gateway2/servlet/MpgRequest";
+   private static final String MONERIS_API_TOKEN = "YOUR_MONERIS_API_TOKEN";
+   private static final String MONERIS_API_STORE_ID = "YOUR_MONERIS_API_STORE_ID";
+
+   @BeforeClass
+   public static void setUp() {
+      System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
+      driver = new ChromeDriver();
+   }
+
+   @AfterClass
+   public static void tearDown() {
+      driver.quit();
+   }
+}
+
+   @Test
+   public void testSuccessfulPaymentTransaction() {
+      // Navigate to the payment page
+      driver.get("https://example.com/payment");
+
+      // Enter the payment details
+      WebElement cardNumberInput = driver.findElement(By.id("cardNumber"));
+      cardNumberInput.sendKeys("4111111111111111");
+
+      WebElement expiryDateInput = driver.findElement(By.id("expiryDate"));
+      expiryDateInput.sendKeys("1222");
+
+      WebElement cvvInput = driver.findElement(By.id("cvv"));
+      cvvInput.sendKeys("123");
+
+      WebElement amountInput = driver.findElement(By.id("amount"));
+      amountInput.sendKeys("10.00");
+
+      // Submit the payment form
+      WebElement submitButton = driver.findElement(By.id("submit"));
+      submitButton.click();
+
+      // Verify that the payment is successful
+      WebElement successMessage = driver.findElement(By.id("successMessage"));
+      Assert.assertEquals("Payment successful", successMessage.getText());
+
+      // Verify that the transaction is processed successfully through Moneris API
+      RequestSpecification requestSpec = RestAssured.given()
+         .param("ps_store_id", MONERIS_API_STORE_ID)
+         .param("hpp_key", MONERIS_API_TOKEN)
+         .param("txn_type", "purchase")
+         .param("amount", "10.00")
+         .param("pan", "4111111111111111")
+         .param("expdate", "1222")
+         .param("cvd_value", "123");
+
+      Response response = requestSpec.post(MONERIS_API_ENDPOINT);
+
+      Assert.assertEquals("1", response.xmlPath().get("response/complete"));
+   }
+
+   @Test
+   public void testInvalidCreditCardNumber() {
+      // Navigate to the payment page
+      driver.get("https://example.com/payment");
+
+      // Enter the payment details with an invalid credit card number
+      WebElement cardNumberInput = driver.findElement(By.id("cardNumber"));
+      cardNumberInput.sendKeys("1234567890123456");
+
+      WebElement expiryDateInput = driver.findElement(By.id("expiryDate"));
+      expiryDateInput.sendKeys("1222");
+
+      WebElement cvvInput = driver.findElement(By.id("cvv"));
+      cvvInput.sendKeys("123");
+
+      WebElement amountInput = driver.findElement(By.id("amount"));
+      amountInput.sendKeys("10.00");
+
+      // Submit the payment form
+      WebElement submitButton = driver.findElement(By.id("submit"));
+      submitButton.click();
+
+
+
+
+
+
+
+
+
+ import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+public class PaymentGatewayTest {
+  
+  @Test
+  public void testInvalidCreditCardNumber() {
+    
+    // Set up test data
+    String invalidCardNumber = "1234567890123456"; // Invalid test credit card number
+    
+    // Set up request parameters
+    String storeId = "YOUR_STORE_ID";
+    String apiToken = "YOUR_API_TOKEN";
+    String amount = "10.00";
+    String cryptType = "7";
+    String orderId = "12345";
+    String custId = "67890";
+    String expectedErrorMessage = "Credit card number is invalid";
+    
+    // Send payment request to Moneris gateway
+    given()
+      .param("storeId", storeId)
+      .param("apiToken", apiToken)
+      .param("amount", amount)
+      .param("cryptType", cryptType)
+      .param("orderId", orderId)
+      .param("custId", custId)
+      .param("pan", invalidCardNumber)
+    .when()
+      .post("https://esqa.moneris.com/gateway2/servlet/CGateway")
+    .then()
+      .statusCode(200)
+      .body("response.success", equalTo("false"))
+      .body("response.code", equalTo("204"))
+      .body("response.message", equalTo(expectedErrorMessage));
+  }
+}
+
+
+
+
+import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+public class PaymentGatewayTest {
+  
+  @Test
+  public void testInvalidCreditCardNumber() {
+    
+    // Set up test data
+    String invalidCardNumber = "1234567890123456"; // Invalid test credit card number
+    
+    // Set up request parameters
+    String storeId = "YOUR_STORE_ID";
+    String apiToken = "YOUR_API_TOKEN";
+    String amount = "10.00";
+    String cryptType = "7";
+    String orderId = "12345";
+    String custId = "67890";
+    String expectedErrorMessage = "Credit card number is invalid";
+    
+    // Send payment request to Moneris gateway
+    given()
+      .param("storeId", storeId)
+      .param("apiToken", apiToken)
+      .param("amount", amount)
+      .param("cryptType", cryptType)
+      .param("orderId", orderId)
+      .param("custId", custId)
+      .param("pan", invalidCardNumber)
+    .when()
+      .post("https://esqa.moneris.com/gateway2/servlet/CGateway")
+    .then()
+      .statusCode(200)
+      .body("response.success", equalTo("false"))
+      .body("response.code", equalTo("204"))
+      .body("response.message", equalTo(expectedErrorMessage));
+  }
+}
+
+
+
+import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+public class PaymentGatewayTest {
+  
+  @Test
+  public void testExpiredCreditCard() {
+    
+    // Set up test data
+    String expiredCardNumber = "4242424242424242"; // Expired test credit card number
+    
+    // Set up request parameters
+    String storeId = "YOUR_STORE_ID";
+    String apiToken = "YOUR_API_TOKEN";
+    String amount = "10.00";
+    String cryptType = "7";
+    String orderId = "12345";
+    String custId = "67890";
+    String expectedErrorMessage = "Credit card has expired";
+    
+    // Send payment request to Moneris gateway
+    given()
+      .param("storeId", storeId)
+      .param("apiToken", apiToken)
+      .param("amount", amount)
+      .param("cryptType", cryptType)
+      .param("orderId", orderId)
+      .param("custId", custId)
+      .param("pan", expiredCardNumber)
+    .when()
+      .post("https://esqa.moneris.com/gateway2/servlet/CGateway")
+    .then()
+      .statusCode(200)
+      .body("response.success", equalTo("false"))
+      .body("response.code", equalTo("502"))
+      .body("response.message", equalTo(expectedErrorMessage));
+  }
+}
+
+
+
+
+import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+public class PaymentGatewayTest {
+  
+  @Test
+  public void testDeclinedTransaction() {
+    
+    // Set up test data
+    String declinedCardNumber = "4111111111111111"; // Test credit card number that will result in a declined transaction
+    
+    // Set up request parameters
+    String storeId = "YOUR_STORE_ID";
+    String apiToken = "YOUR_API_TOKEN";
+    String amount = "10.00";
+    String cryptType = "7";
+    String orderId = "12345";
+    String custId = "67890";
+    String expectedErrorMessage = "DECLINED";
+    
+    // Send payment request to Moneris gateway
+    given()
+      .param("storeId", storeId)
+      .param("apiToken", apiToken)
+      .param("amount", amount)
+      .param("cryptType", cryptType)
+      .param("orderId", orderId)
+      .param("custId", custId)
+      .param("pan", declinedCardNumber)
+    .when()
+      .post("https://esqa.moneris.com/gateway2/servlet/CGateway")
+    .then()
+      .statusCode(200)
+      .body("response.success", equalTo("false"))
+      .body("response.code", equalTo("001"))
+      .body("response.message", equalTo(expectedErrorMessage));
+  }
+}
+
+
+
+
+
+
+import org.junit.Test;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import static org.junit.Assert.assertEquals;
+
+public class MonerisIntegrationTests {
+
+    // Moneris test credentials for the test environment
+    private static final String API_TOKEN = "YOUR_API_TOKEN";
+    private static final String STORE_ID = "YOUR_STORE_ID";
+
+    // Test data for declined transaction
+    private static final String TEST_CC_NUMBER = "4242424242424242"; // a valid test credit card number that will result in a declined transaction
+    private static final String TEST_EXPIRY_MONTH = "12";
+    private static final String TEST_EXPIRY_YEAR = "2024";
+    private static final String TEST_CVV = "123";
+    private static final String TEST_AMOUNT = "10.00";
+    private static final String TEST_CURRENCY = "CAD";
+
+    @Test
+    public void testDeclinedTransaction() {
+        // Send payment request to Moneris gateway
+        Response response = RestAssured.given()
+                .baseUri("https://gatewayt.moneris.com/chkt/request")
+                .contentType(ContentType.URLENC)
+                .formParam("ps_store_id", STORE_ID)
+                .formParam("hpp_key", API_TOKEN)
+                .formParam("charge_total", TEST_AMOUNT)
+                .formParam("order_id", "1234567890")
+                .formParam("cardholder_name", "John Doe")
+                .formParam("card_number", TEST_CC_NUMBER)
+                .formParam("expdate_month", TEST_EXPIRY_MONTH)
+                .formParam("expdate_year", TEST_EXPIRY_YEAR)
+                .formParam("cvd_value", TEST_CVV)
+                .formParam("crypt_type", "7")
+                .formParam("dynamic_descriptor", "Test Transaction")
+                .formParam("currency", TEST_CURRENCY)
+                .post();
+
+        // Verify that the gateway returns an appropriate error message to the application
+        assertEquals("DECLINE", response.formParam("response_code"));
+        assertEquals("Transaction declined", response.formParam("message"));
+    }
+}
